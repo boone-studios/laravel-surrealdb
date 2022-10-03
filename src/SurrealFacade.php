@@ -1,13 +1,13 @@
 <?php
 
-namespace Boonestudios\LaravelSurrealdb;
+namespace BooneStudios\Surreal;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @see \Boonestudios\LaravelSurrealdb\Skeleton\SkeletonClass
+ * @see \BooneStudios\Surreal\Skeleton\SkeletonClass
  */
-class LaravelSurrealdbFacade extends Facade
+class SurrealFacade extends Facade
 {
     /**
      * Get the registered name of the component.

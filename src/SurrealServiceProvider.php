@@ -1,10 +1,10 @@
 <?php
 
-namespace Boonestudios\LaravelSurrealdb;
+namespace BooneStudios\Surreal;
 
 use Illuminate\Support\ServiceProvider;
 
-class LaravelSurrealdbServiceProvider extends ServiceProvider
+class SurrealServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap the application services.
@@ -54,7 +54,7 @@ class LaravelSurrealdbServiceProvider extends ServiceProvider
 
         // Register the main class to use with the facade
         $this->app->singleton('laravel-surrealdb', function () {
-            return new LaravelSurrealdb;
+            return new Surreal();
         });
     }
 }
