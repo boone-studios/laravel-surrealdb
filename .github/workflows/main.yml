@@ -66,7 +66,7 @@ jobs:
       - name: Install dependencies
         run: |
           composer require "laravel/framework:8.*" "orchestra/testbench:^6.6" --no-interaction --no-update
-          composer update --prefer-lowest, prefer-stable --prefer-dist --no-interaction
+          composer update --prefer-stable --prefer-lowest --prefer-dist --no-interaction
 
       - name: Execute tests
         run: vendor/bin/pest
