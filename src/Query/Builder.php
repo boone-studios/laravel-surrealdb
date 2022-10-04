@@ -66,7 +66,7 @@ class Builder extends BaseBuilder
         return collect($this->onceWithColumns(Arr::wrap($columns), function () {
             $result = $this->processor->processSelect($this, $this->runSelect());
 
-            return Arr::first(Arr::get($result, 'result', []));
+            return Arr::get($result, 'result', []);
         }));
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\DB;
 
-afterEach(function () {
+beforeEach(function () {
     DB::table('users')->truncate();
 });
 
@@ -29,7 +29,11 @@ it('can delete records', function () {
 
     $this->assertIsString($user);
 
-    $users = DB::table('users')->where('id', $user)->get();
+    $one_user = DB::table('users')->where('id', $user)->get();
+    $this->assertCount(1, $one_user);
 
-    $this->assertCount(1, $users);
+    DB::table('users')->where('id', $user)->delete();
+
+    $no_users = DB::table('users')->where('id', $user)->get();
+    $this->assertCount(0, $no_users);
 });

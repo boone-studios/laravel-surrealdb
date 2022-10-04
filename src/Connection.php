@@ -96,6 +96,32 @@ class Connection extends BaseConnection
     }
 
     /**
+     * @inheritDoc
+     */
+    public function affectingStatement($query, $bindings = [])
+    {
+        return $this->run($query, $bindings, function ($query, $bindings) {
+            if ($this->pretending()) {
+                return 0;
+            }
+
+            $query = Str::finish($query, ' return count()');
+
+            $response = $this->connection->request('POST', '/sql', [
+                'body' => $this->bindQueryParams($query, $bindings),
+            ]);
+
+            $this->lastResults = json_decode($response->getBody(), true);
+
+            $this->recordsHaveBeenModified(
+                ($count = Arr::get($this->lastResults, 'result.0.count', 0)) > 0
+            );
+
+            return $count;
+        });
+    }
+
+    /**
      * Begin a fluent query against a database collection.
      *
      * @param string $collection
