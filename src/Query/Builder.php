@@ -2,7 +2,9 @@
 
 namespace BooneStudios\Surreal\Query;
 
+use BooneStudios\Surreal\Connection;
 use Illuminate\Database\Query\Builder as BaseBuilder;
+use Illuminate\Support\Arr;
 
 class Builder extends BaseBuilder
 {
@@ -29,7 +31,7 @@ class Builder extends BaseBuilder
      */
     public function __construct(Connection $connection, Processor $processor)
     {
-        $this->grammar    = new Grammar();
+        $this->grammar    = new Grammar;
         $this->connection = $connection;
         $this->processor  = $processor;
     }
@@ -54,5 +56,20 @@ class Builder extends BaseBuilder
         ];
 
         return md5(serialize(array_values($key)));
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function get($columns = ['*'])
+    {
+        return collect($this->onceWithColumns(Arr::wrap($columns), function () {
+            $result = $this->processor->processSelect($this, $this->runSelect());
+            $result = $this->connection->decode($result);
+
+            dd($result[0]);
+
+            return Arr::get($result[0], 'result', []);
+        }));
     }
 }

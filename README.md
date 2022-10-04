@@ -11,7 +11,7 @@ This package allows you to use a database connection that is not defined in your
 You can install the package via composer:
 
 ```bash
-composer require BooneStudios/laravel-surrealdb
+composer require boone-studios/laravel-surrealdb
 ```
 
 ## Usage
