@@ -1,14 +1,25 @@
-# Laravel SurrealDB
+<br>
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/BooneStudios/laravel-surrealdb.svg?style=flat-square)](https://packagist.org/packages/BooneStudios/laravel-surrealdb)
-[![Total Downloads](https://img.shields.io/packagist/dt/BooneStudios/laravel-surrealdb.svg?style=flat-square)](https://packagist.org/packages/BooneStudios/laravel-surrealdb)
-![GitHub Actions](https://github.com/BooneStudios/laravel-surrealdb/actions/workflows/main.yml/badge.svg)
+<p align="center">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/boone-software/laravel-surrealdb/assets/logo-light.svg">
+        <img alt="SurrealDB for Laravel" src="https://raw.githubusercontent.com/boone-software/laravel-surrealdb/assets/logo-dark.svg">
+    </picture>
+</p>
 
-This package allows you to use a database connection that is not defined in your `config/database.php` file. This is useful for connecting to a database that is not defined in your application, but is still accessible to your application.
+<p align="center">
+    [![Latest Version on Packagist](https://img.shields.io/packagist/v/boone-studios/laravel-surrealdb.svg?style=flat-square)](https://packagist.org/packages/BooneStudios/laravel-surrealdb)
+    [![Total Downloads](https://img.shields.io/packagist/dt/boone-studios/laravel-surrealdb.svg?style=flat-square)](https://packagist.org/packages/BooneStudios/laravel-surrealdb)
+    ![GitHub Actions](https://github.com/boone-studios/laravel-surrealdb/actions/workflows/main.yml/badge.svg)
+</p>
+
+## Overview
+
+This package allows you to add a connection to SurrealDB in your Laravel project.
 
 ## Installation
 
-You can install the package via composer:
+You can install the package via Composer:
 
 ```bash
 composer require boone-studios/laravel-surrealdb
@@ -40,8 +51,8 @@ If you discover any security related issues, please email support@BooneStudios.o
 
 ## Credits
 
--   [Boone Studios, LLC](https://github.com/BooneStudios)
--   [All Contributors](../../contributors)
+- [Boone Studios, LLC](https://github.com/BooneStudios)
+- [All Contributors](../../contributors)
 
 ## License
 
