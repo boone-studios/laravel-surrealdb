@@ -9,26 +9,27 @@ on:
 jobs:
   laravel:
     name: Laravel (PHP ${{ matrix.php-versions }})
-    
+
+    env:
+      SURREALDB_HOST: localhost
+      SURREALDB_PORT: 8000
+      SURREALDB_USERNAME: root
+      SURREALDB_PASSWORD: root
+      SURREALDB_DATABASE: test
+      SURREALDB_NAMESPACE: test
+
     runs-on: [ ubuntu-latest ]
 
     services:
       surrealdb:
-        image: surrealcode/surrealdb:latest
+        image: surrealdb/surrealdb:latest
         ports:
           - 8000:8000
-        env:
-          SURREALDB_HOST: localhost
-          SURREALDB_PORT: 8000
-          SURREALDB_USERNAME: root
-          SURREALDB_PASSWORD: root
-          SURREALDB_DATABASE: test
-          SURREALDB_NAMESPACE: test
 
     strategy:
       fail-fast: false
       matrix:
-        php-versions: [ '7.4', '8.0', '8.1' ]
+        php-versions: [ '8.0', '8.1' ]
 
     steps:
       - name: Checkout code
