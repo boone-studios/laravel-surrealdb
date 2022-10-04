@@ -56,7 +56,7 @@ jobs:
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install Composer dependencies
-        run: composer install --no-progress --prefer-dist --optimize-autoloader
+        run: composer install --no-progress --optimize-autoloader
 
       - name: Setup problem matchers
         run: |
@@ -64,4 +64,4 @@ jobs:
           echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
       - name: Execute tests
-        run: vendor/bin/pest
+        run: ./vendor/bin/pest
