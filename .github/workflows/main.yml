@@ -58,10 +58,5 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-progress --optimize-autoloader
 
-      - name: Setup problem matchers
-        run: |
-          echo "::add-matcher::${{ runner.tool_cache }}/php.json"
-          echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
-
       - name: Execute tests
         run: composer test
