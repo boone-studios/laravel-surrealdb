@@ -1,60 +1,71 @@
 name: run-tests
 
 on:
-    push:
-        branches: [master]
-    pull_request:
-        branches: [master]
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-    test:
-        runs-on: ${{ matrix.os }}
+  laravel:
+    name: Laravel (PHP ${{ matrix.php-versions }})
+    
+    runs-on: [ ubuntu-latest ]
 
-        strategy:
-            fail-fast: true
-            matrix:
-                os: [ubuntu-latest]
-                php: [8.0]
-                laravel: [8.*]
-                stability: [prefer-lowest, prefer-stable]
-                include:
-                    - laravel: 8.*
-                      testbench: ^6.6
+    services:
+      surrealdb:
+        image: surrealcode/surrealdb:latest
+        ports:
+          - 8000:8000
+        env:
+          SURREALDB_HOST: localhost
+          SURREALDB_PORT: 8000
+          SURREALDB_USERNAME: root
+          SURREALDB_PASSWORD: root
+          SURREALDB_DATABASE: test
+          SURREALDB_NAMESPACE: test
 
-        name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        php-versions: [ '7.4', '8.0', '8.1' ]
 
-        services:
-          surrealdb:
-            image: surrealcode/surrealdb:latest
-            ports:
-              - 8000:8000
-            env:
-              SURREALDB_HOST: localhost
-              SURREALDB_PORT: 8000
-              SURREALDB_USERNAME: root
-              SURREALDB_PASSWORD: root
-              SURREALDB_DATABASE: test
-              SURREALDB_NAMESPACE: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v2
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          extensions: mbstring, dom, fileinfo, pgsql
+          coverage: xdebug
 
-            - name: Setup PHP
-              uses: shivammathur/setup-php@v2
-              with:
-                  php-version: ${{ matrix.php }}
-                  extensions: dom, curl, libxml, mbstring, zip, pcntl, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo, libsodium
-                  coverage: none
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
 
-            - name: Setup problem matchers
-              run: |
-                  echo "::add-matcher::${{ ru
-                nner.tool_cache }}/php.json"
-                  echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
-            - name: Install dependencies
-              run: |
-                  composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
-                  composer update --${{ matrix.stability }} --prefer-dist --no-interaction
-            - name: Execute tests
-              run: vendor/bin/pest
+      - name: Cache composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          # Use composer.json for key, if composer.lock is not committed.
+          # key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Setup problem matchers
+        run: |
+          echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+          echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:8.*" "orchestra/testbench:^6.6" --no-interaction --no-update
+          composer update --prefer-lowest, prefer-stable --prefer-dist --no-interaction
+
+      - name: Execute tests
+        run: vendor/bin/pest
