@@ -65,11 +65,8 @@ class Builder extends BaseBuilder
     {
         return collect($this->onceWithColumns(Arr::wrap($columns), function () {
             $result = $this->processor->processSelect($this, $this->runSelect());
-            $result = $this->connection->decode($result);
 
-            dd($result[0]);
-
-            return Arr::get($result[0], 'result', []);
+            return Arr::first(Arr::get($result, 'result', []));
         }));
     }
 }

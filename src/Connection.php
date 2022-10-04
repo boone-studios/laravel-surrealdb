@@ -20,6 +20,31 @@ class Connection extends BaseConnection
      */
     protected $connection;
 
+    /*
+     * The last results from a query.
+     *
+     * @param array $results
+     */
+    protected $lastResults;
+
+    /**
+     * Bind values to their parameters in the given query.
+     *
+     * @param $query
+     * @param $bindings
+     *
+     * @return array
+     */
+    protected function bindQueryParams($query, $bindings)
+    {
+        foreach ($this->prepareBindings($bindings) as $key => $value) {
+            $value = is_string($value) ? "'$value'" : $value;
+            $query = Str::replaceFirst('?', $value, $query);
+        }
+
+        return $query;
+    }
+
     /**
      * Create a new SurrealDB connection.
      *
@@ -50,15 +75,6 @@ class Connection extends BaseConnection
         }
 
         return new GuzzleClient($clientConfig);
-    }
-
-    protected function getDefaultDatabaseName()
-    {
-        if (empty($this->config['database'])) {
-            throw new InvalidArgumentException('Database is not properly configured.');
-        }
-
-        return $this->config['database'];
     }
 
     /**
@@ -107,7 +123,11 @@ class Connection extends BaseConnection
             return $response;
         }
 
-        return json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        // For now, SurrealDB returns an associative array inside another array
+        // We'll just return the first element of that array because it contains the data we want
+        $decoded = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+
+        return $decoded[0];
     }
 
     /**
@@ -135,6 +155,16 @@ class Connection extends BaseConnection
     }
 
     /**
+     * Return the last results from a query.
+     *
+     * @return array
+     */
+    public function getLastResults()
+    {
+        return $this->lastResults;
+    }
+
+    /**
      * Run a select statement against the database.
      *
      * @param string $query
@@ -150,16 +180,13 @@ class Connection extends BaseConnection
                 return [];
             }
 
-            foreach ($this->prepareBindings($bindings) as $key => $value) {
-                $value = is_string($value) ? "'$value'" : $value;
-                $query = Str::replaceFirst('?', $value, $query);
-            }
-
             $response = $this->connection->request('POST', '/sql', [
-                'body' => $query,
+                'body' => $this->bindQueryParams($query, $bindings),
             ]);
 
-            return $this->decode($response);
+            $this->lastResults = $this->decode($response);
+
+            return $this->lastResults;
         });
     }
 
@@ -177,20 +204,15 @@ class Connection extends BaseConnection
                 return true;
             }
 
-            foreach ($this->prepareBindings($bindings) as $key => $value) {
-                $value = is_string($value) ? "'$value'" : $value;
-                $query = Str::replaceFirst('?', $value, $query);
-            }
-
             $response = $this->connection->request('POST', '/sql', [
-                'body' => $query,
+                'body' => $this->bindQueryParams($query, $bindings),
             ]);
 
             $this->recordsHaveBeenModified();
 
-            $decoded = $this->decode($response);
+            $this->lastResults = $this->decode($response);
 
-            return Arr::get($decoded, 'status', 'OK') === 'OK';
+            return Arr::get($this->lastResults, 'status', 'OK') === 'OK';
         });
     }
 

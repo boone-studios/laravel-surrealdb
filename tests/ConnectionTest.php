@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use BooneStudios\Surreal\Connection;
 use BooneStudios\Surreal\Query\Builder;
 
-test('connection', function () {
+it('can connect to SurrealDB', function () {
     $connection = DB::connection('surrealdb');
 
     expect($connection)->toBeInstanceOf(Connection::class);

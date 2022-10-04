@@ -9,10 +9,27 @@ use RuntimeException;
 class Grammar extends BaseGrammar
 {
     /**
-     * Convert an array of column names into a delimited string.
-     *
-     * @param array $columns
-     * @return string
+     * @inheritDoc
+     */
+    protected function compileDeleteWithJoins(Builder $query, $table, $where)
+    {
+        $alias = last(explode(' as ', $table));
+
+        $joins = $this->compileJoins($query, $query->joins);
+
+        return "delete {$alias} {$table} {$joins} {$where}";
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function compileDeleteWithoutJoins(Builder $query, $table, $where)
+    {
+        return "delete {$table} {$where}";
+    }
+
+    /**
+     * @inheritDoc
      */
     public function columnize(array $columns)
     {
@@ -20,11 +37,7 @@ class Grammar extends BaseGrammar
     }
 
     /**
-     * Compile an insert statement into SQL.
-     *
-     * @param \Illuminate\Database\Query\Builder $query
-     * @param array                              $values
-     * @return string
+     * @inheritDoc
      */
     public function compileInsert(Builder $query, array $values)
     {
@@ -37,23 +50,20 @@ class Grammar extends BaseGrammar
         }
 
         $parameters = collect($values)->map(function ($record) {
-                $statements = [];
+            $statements = [];
 
-                foreach ($record as $key => $value) {
-                    $statements[] = "{$key} = ?";
-                }
+            foreach ($record as $key => $value) {
+                $statements[] = "{$key} = ?";
+            }
 
-                return implode(', ', $statements);
-            })->implode(' AND ');
+            return implode(', ', $statements);
+        })->implode(' AND ');
 
         return "create $query->from set $parameters";
     }
 
     /**
-     * Compile a select query into SQL.
-     *
-     * @param \Illuminate\Database\Query\Builder $query
-     * @return string
+     * @inheritDoc
      */
     public function compileSelect(Builder $query)
     {
@@ -82,5 +92,129 @@ class Grammar extends BaseGrammar
         $query->columns = $original;
 
         return $sql;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function compileTruncate(Builder $query)
+    {
+        return ['delete ' . $this->wrapTable($query->from) => []];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function whereBasic(Builder $query, $where)
+    {
+        $value = $this->parameter($where['value']);
+
+        $operator = str_replace('?', '??', $where['operator']);
+
+        return $where['column'] . ' ' . $operator . ' ' . $value;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function whereBetween(Builder $query, $where)
+    {
+        $between = $where['not'] ? 'not between' : 'between';
+
+        $min = $this->parameter(is_array($where['values']) ? reset($where['values']) : $where['values'][0]);
+
+        $max = $this->parameter(is_array($where['values']) ? end($where['values']) : $where['values'][1]);
+
+        return $where['column'] . ' ' . $between . ' ' . $min . ' and ' . $max;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function whereBetweenColumns(Builder $query, $where)
+    {
+        $between = $where['not'] ? 'not between' : 'between';
+
+        $min = $this->wrap(is_array($where['values']) ? reset($where['values']) : $where['values'][0]);
+
+        $max = $this->wrap(is_array($where['values']) ? end($where['values']) : $where['values'][1]);
+
+        return $where['column'] . ' ' . $between . ' ' . $min . ' and ' . $max;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function whereIn(Builder $query, $where)
+    {
+        if (! empty($where['values'])) {
+            return $where['column'] . ' inside [' . $this->parameterize($where['values']) . ']';
+        }
+
+        return '0 = 1';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function whereInRaw(Builder $query, $where)
+    {
+        if (! empty($where['values'])) {
+            return $where['column'] . ' inside [' . implode(', ', $where['values']) . ']';
+        }
+
+        return '0 = 1';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function whereNotIn(Builder $query, $where)
+    {
+        if (! empty($where['values'])) {
+            return $where['column'] . ' not inside [' . $this->parameterize($where['values']) . ']';
+        }
+
+        return '1 = 1';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function whereNotInRaw(Builder $query, $where)
+    {
+        if (! empty($where['values'])) {
+            return $where['column'] . ' not inside [' . implode(', ', $where['values']) . ']';
+        }
+
+        return '1 = 1';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function whereNotNull(Builder $query, $where)
+    {
+        return $where['column'] . ' is not null';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function whereNull(Builder $query, $where)
+    {
+        return $where['column'] . ' is null';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function wrapTable($table)
+    {
+        if (! $this->isExpression($table)) {
+            return "type::table('" . trim($this->tablePrefix . $table) . "')";
+        }
+
+        return $this->getValue($table);
     }
 }
