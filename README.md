@@ -2,15 +2,15 @@
 
 <p align="center">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/boone-software/laravel-surrealdb/assets/logo-light.svg">
-        <img alt="SurrealDB for Laravel" src="https://raw.githubusercontent.com/boone-software/laravel-surrealdb/assets/logo-dark.svg">
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/boone-studios/laravel-surrealdb/assets/logo-light.svg">
+        <img alt="SurrealDB for Laravel" src="https://raw.githubusercontent.com/boone-studios/laravel-surrealdb/assets/logo-dark.svg">
     </picture>
 </p>
 
 <p align="center">
-    [![Latest Version on Packagist](https://img.shields.io/packagist/v/boone-studios/laravel-surrealdb.svg?style=flat-square)](https://packagist.org/packages/BooneStudios/laravel-surrealdb)
-    [![Total Downloads](https://img.shields.io/packagist/dt/boone-studios/laravel-surrealdb.svg?style=flat-square)](https://packagist.org/packages/BooneStudios/laravel-surrealdb)
-    ![GitHub Actions](https://github.com/boone-studios/laravel-surrealdb/actions/workflows/main.yml/badge.svg)
+    <a href="https://packagist.org/packages/BooneStudios/laravel-surrealdb"><img src="https://img.shields.io/packagist/v/boone-studios/laravel-surrealdb.svg?style=flat-square" alt="Latest Version on Packagist"></a>
+    <a href="https://packagist.org/packages/BooneStudios/laravel-surrealdb"><img src="https://img.shields.io/packagist/dt/boone-studios/laravel-surrealdb.svg?style=flat-square" alt="Total Downloads"></a>
+    <img src="https://github.com/boone-studios/laravel-surrealdb/actions/workflows/main.yml/badge.svg" alt="GitHub Actions">
 </p>
 
 ## Overview
