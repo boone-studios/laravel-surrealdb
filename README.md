@@ -2,10 +2,12 @@
 
 <p align="center">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/boone-studios/laravel-surrealdb/assets/logo-light.svg">
-        <img alt="SurrealDB for Laravel" src="https://raw.githubusercontent.com/boone-studios/laravel-surrealdb/assets/logo-dark.svg">
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/boone-studios/laravel-surrealdb/main/assets/logo-light.svg">
+        <img alt="SurrealDB for Laravel" src="https://raw.githubusercontent.com/boone-studios/laravel-surrealdb/main/assets/logo-dark.svg">
     </picture>
 </p>
+
+<br>
 
 <p align="center">
     <a href="https://packagist.org/packages/BooneStudios/laravel-surrealdb"><img src="https://img.shields.io/packagist/v/boone-studios/laravel-surrealdb.svg?style=flat-square" alt="Latest Version on Packagist"></a>
