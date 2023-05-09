@@ -24,7 +24,7 @@ jobs:
       surrealdb:
         image: surrealdb/surrealdb:latest
         ports:
-          - 8000:8000
+          - 8000/tcp
 
     strategy:
       fail-fast: false
