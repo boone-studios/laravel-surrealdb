@@ -2,11 +2,15 @@
 
 All notable changes to `laravel-surrealdb` will be documented in this file
 
-## 0.2.0 - 2023-05-09
+## 0.2.1 - 2023-05-09
 
-Fixed
+### Fixed
 
 - Connection to SurrealDB using Basic Auth (#10)
+
+### Updated
+
+- Package name to `boone-studios/laravel-surrealdb`
 
 ## 0.1.0 - 2023-01-07
 
