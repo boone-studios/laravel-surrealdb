@@ -2,6 +2,12 @@
 
 All notable changes to `laravel-surrealdb` will be documented in this file
 
+## 0.2.0 - 2023-05-09
+
+Fixed
+
+- Connection to SurrealDB using Basic Auth (#10)
+
 ## 0.1.0 - 2023-01-07
 
 ### Added

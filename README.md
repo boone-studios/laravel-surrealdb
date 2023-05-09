@@ -10,8 +10,8 @@
 <br>
 
 <p align="center">
-    <a href="https://packagist.org/packages/BooneStudios/laravel-surrealdb"><img src="https://img.shields.io/packagist/v/boone-studios/laravel-surrealdb.svg?style=flat-square" alt="Latest Version on Packagist"></a>
-    <a href="https://packagist.org/packages/BooneStudios/laravel-surrealdb"><img src="https://img.shields.io/packagist/dt/boone-studios/laravel-surrealdb.svg?style=flat-square" alt="Total Downloads"></a>
+    <a href="https://packagist.org/packages/boone-studios/laravel-surrealdb"><img src="https://img.shields.io/packagist/v/boone-studios/laravel-surrealdb.svg?style=flat-square" alt="Latest Version on Packagist"></a>
+    <a href="https://packagist.org/packages/boone-studios/laravel-surrealdb"><img src="https://img.shields.io/packagist/dt/boone-studios/laravel-surrealdb" alt="Total Downloads"></a>
     <img src="https://github.com/boone-studios/laravel-surrealdb/actions/workflows/main.yml/badge.svg" alt="GitHub Actions">
 </p>
 
