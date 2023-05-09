@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-versions: [ '8.0', '8.1' ]
+        php-versions: [ '8.1', '8.2' ]
 
     steps:
       - name: Checkout code
@@ -57,4 +57,4 @@ jobs:
         run: composer install --no-progress --optimize-autoloader
 
       - name: Execute tests
-        run: composer test
+        run: vendor/bin/pest
