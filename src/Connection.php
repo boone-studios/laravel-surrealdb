@@ -55,23 +55,22 @@ class Connection extends BaseConnection
      */
     protected function createConnection(array $config, array $options)
     {
-        $base_uri = (! parse_url($config['host'], PHP_URL_HOST)) ? $config['host'] . ':' . $config['port'] : $config['host'];
+        $baseUri = (! parse_url($config['host'], PHP_URL_HOST))
+            ? $config['host'] . ':' . $config['port']
+            : $config['host'];
 
         $clientConfig = [
-            'base_uri' => $base_uri,
+            'base_uri' => $baseUri,
             'headers'  => [
-                'Content-Type' => 'application/json',
-                'NS'           => $config['namespace'],
-                'DB'           => $config['database'],
+                'Accept'        => 'application/json',
+                'NS'            => $config['namespace'],
+                'DB'            => $config['database'],
             ],
         ];
 
-        // Both username and password are required for Basic Auth
-        if (isset($config['username'])) {
-            $clientConfig['auth'] = [
-                $config['username'],
-                $config['password'] ?? '',
-            ];
+        if ($config['username'] && $config['password']) {
+            $credentials = base64_encode($config['username'] . ':' . $config['password']);
+            $clientConfig['headers']['Authorization'] = 'Basic ' . $credentials;
         }
 
         return new GuzzleClient($clientConfig);

@@ -1,4 +1,4 @@
-name: run-tests
+name: tests
 
 on:
   push:
@@ -20,16 +20,10 @@ jobs:
 
     runs-on: [ ubuntu-latest ]
 
-    services:
-      surrealdb:
-        image: surrealdb/surrealdb:latest
-        ports:
-          - 8000:8000
-
     strategy:
       fail-fast: false
       matrix:
-        php-versions: [ '8.0', '8.1' ]
+        php-versions: [ '8.1', '8.2' ]
 
     steps:
       - name: Checkout code
@@ -56,5 +50,11 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-progress --optimize-autoloader
 
+      - name: Start SurrealDB
+        run: sh ./tests/scripts/docker-restart.sh
+
       - name: Execute tests
-        run: composer test
+        run: vendor/bin/pest
+
+      - name: Stop SurrealDB
+        run: sh ./tests/scripts/docker-stop.sh
