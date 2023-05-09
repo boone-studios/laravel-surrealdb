@@ -8,9 +8,7 @@ $surrealPassword  = env('SURREALDB_PASSWORD', 'root');
 $surrealDatabase  = env('SURREALDB_DATABASE', 'test');
 
 return [
-
     'connections' => [
-
         'surrealdb' => [
             'namespace' => $surrealNamespace,
             'driver'    => 'surrealdb',
@@ -20,7 +18,5 @@ return [
             'username'  => $surrealUsername,
             'password'  => $surrealPassword,
         ],
-
     ],
-
 ];

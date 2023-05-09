@@ -5,6 +5,7 @@ composer.lock
 Thumbs.db
 /phpunit.xml
 /.idea
+/.fleet
 /.vscode
 .php-cs-fixer.cache
 .phpunit.result.cache
