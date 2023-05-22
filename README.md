@@ -60,6 +60,6 @@ If you discover any security related issues, please email support@BooneStudios.o
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
 
-## Laravel Package Boilerplate
+## Star History
 
-This package was generated using the [Laravel Package Boilerplate](https://laravelpackageboilerplate.com).
+[![Star History Chart](https://api.star-history.com/svg?repos=boone-studios/laravel-surrealdb&type=Date)](https://star-history.com/#boone-studios/laravel-surrealdb&Date)
