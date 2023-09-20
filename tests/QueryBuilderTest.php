@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
@@ -35,6 +36,38 @@ it ('can read records', function () {
             'user' => [
                 'name'  => 'John Doe',
                 'email' => 'john.doe@example.com',
+            ],
+        ]);
+});
+
+it('can read records with where clause', function () {
+    $uuid1 = (string) Str::uuid();
+    $uuid2 = (string) Str::uuid();
+
+    $query = DB::table('users')->insert([
+        [
+            'user.uuid'  => $uuid1,
+            'user.name'  => 'John Doe',
+            'user.email' => 'john.doe@example.com'
+        ],
+        [
+            'user.uuid'  => $uuid2,
+            'user.name'  => 'Jane Doe',
+            'user.email' => 'jane.doe@example.com',
+        ],
+    ]);
+
+    $user = DB::table('users')
+        ->where('user.uuid', $uuid2)
+        ->get();
+
+    expect($user)
+        ->toHaveCount(1)
+        ->and($user[0])->toMatchArray([
+            'user' => [
+                'uuid'  => $uuid2,
+                'name'  => 'Jane Doe',
+                'email' => 'jane.doe@example.com',
             ],
         ]);
 });
