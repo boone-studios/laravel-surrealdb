@@ -21,6 +21,24 @@ it('can create records', function () {
     expect($users)->toHaveCount(1);
 });
 
+it ('can read records', function () {
+    $user = DB::table('users')->insertGetId([
+        'user.name'  => 'John Doe',
+        'user.email' => 'john.doe@example.com',
+    ]);
+
+    $users = DB::table('users')->get();
+
+    expect($users)
+        ->toHaveCount(1)
+        ->and($users[0])->toMatchArray([
+            'user' => [
+                'name'  => 'John Doe',
+                'email' => 'john.doe@example.com',
+            ],
+        ]);
+});
+
 it('can update records', function () {
     $user = DB::table('users')->insertGetId([
         'user.name'  => 'John Doe',
