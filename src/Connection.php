@@ -2,6 +2,14 @@
 
 namespace BooneStudios\Surreal;
 
+use BooneStudios\Surreal\{
+    Query\Builder as QueryBuilder,
+    Query\Grammar as QueryGrammar,
+    Query\Processor as QueryProcessor,
+    Schema\BluePrint as SchemaBlueprint,
+    Schema\Builder as SchemaBuilder,
+    Schema\Grammar as SchemaGrammar,
+};
 use GuzzleHttp\Client as GuzzleClient;
 use Illuminate\Database\Connection as BaseConnection;
 use Illuminate\Support\Arr;
@@ -18,14 +26,14 @@ class Connection extends BaseConnection
      *
      * @var \GuzzleHttp\Client
      */
-    protected $connection;
+    protected GuzzleClient $connection;
 
     /*
      * The last results from a query.
      *
      * @param array $results
      */
-    protected $lastResults;
+    protected array $lastResults;
 
     /**
      * Bind values to their parameters in the given query.
@@ -77,6 +85,36 @@ class Connection extends BaseConnection
     }
 
     /**
+     * Get the default post processor instance.
+     *
+     * @return \BooneStudios\Surreal\Query\Processor
+     */
+    protected function getDefaultPostProcessor()
+    {
+        return new QueryProcessor;
+    }
+
+    /**
+     * Get the default query grammar instance.
+     *
+     * @return \BooneStudios\Surreal\Query\Grammar
+     */
+    protected function getDefaultQueryGrammar()
+    {
+        return new QueryGrammar;
+    }
+
+    /**
+     * Get the default schema grammar instance.
+     *
+     * @return \BooneStudios\Surreal\Schema\Grammar
+     */
+    protected function getDefaultSchemaGrammar()
+    {
+        return new SchemaGrammar;
+    }
+
+    /**
      * Create a new database connection instance.
      *
      * @param array $config
@@ -125,11 +163,11 @@ class Connection extends BaseConnection
      *
      * @param string $collection
      *
-     * @return Query\Builder
+     * @return \BooneStudios\Surreal\Query\Builder
      */
     public function collection($collection)
     {
-        $query = new Query\Builder($this, $this->getPostProcessor());
+        $query = new QueryBuilder($this, $this->getPostProcessor());
 
         return $query->from($collection);
     }
@@ -161,22 +199,6 @@ class Connection extends BaseConnection
     public function getDriverName()
     {
         return 'surrealdb';
-    }
-
-    /**
-     * @inheritdoc
-     */
-    protected function getDefaultPostProcessor()
-    {
-        return new Query\Processor;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getDefaultQueryGrammar()
-    {
-        return new Query\Grammar;
     }
 
     /**

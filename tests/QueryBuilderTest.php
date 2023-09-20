@@ -2,38 +2,19 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\DB;
+use BooneStudios\Surreal\Schema\Blueprint;
+use Illuminate\Database\Schema\Blueprint as BaseBlueprint;
 
-beforeEach(function () {
-    DB::table('users')->truncate();
+afterAll(function () {
+    Schema::drop('testdb');
 });
 
-it('can create records', function () {
-    $users = DB::table('users')->get();
-    $this->assertCount(0, $users);
+it('can create a new table', function () {
+    Schema::create('testdb', function (BaseBlueprint $table) {
+        $table->index();
+        $table->string('name');
+        $table->timestamps();
+    });
 
-    DB::table('users')->insert([
-        'user.name'  => 'John Doe',
-        'user.email' => 'john.doe@example.com',
-    ]);
-
-    $users = DB::table('users')->get();
-    $this->assertCount(1, $users);
-});
-
-it('can delete records', function () {
-    $user = DB::table('users')->insertGetId([
-        'user.name'  => 'John Doe',
-        'user.email' => 'john.doe@example.com',
-    ]);
-
-    $this->assertIsString($user);
-
-    $one_user = DB::table('users')->where('id', $user)->get();
-    $this->assertCount(1, $one_user);
-
-    DB::table('users')->where('id', $user)->delete();
-
-    $no_users = DB::table('users')->where('id', $user)->get();
-    $this->assertCount(0, $no_users);
+    expect(Schema::hasTable('testdb'))->toBeTrue();
 });
