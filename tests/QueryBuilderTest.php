@@ -10,7 +10,7 @@ beforeEach(function () {
 
 it('can create records', function () {
     $users = DB::table('users')->get();
-    $this->assertCount(0, $users);
+    expect($users)->toHaveCount(0);
 
     DB::table('users')->insert([
         'user.name'  => 'John Doe',
@@ -18,7 +18,32 @@ it('can create records', function () {
     ]);
 
     $users = DB::table('users')->get();
-    $this->assertCount(1, $users);
+    expect($users)->toHaveCount(1);
+});
+
+it('can update records', function () {
+    $user = DB::table('users')->insertGetId([
+        'user.name'  => 'John Doe',
+        'user.email' => 'john.doe@example.com',
+    ]);
+
+    $this->assertIsString($user);
+
+    DB::table('users')
+        ->where('user.name', 'John Doe')
+        ->update([
+            'user.name'  => 'Jane Doe',
+        ]);
+
+    $updated_user = DB::table('users')->where('id', $user)->first();
+    expect($updated_user)
+        ->toBeArray()
+        ->toMatchArray([
+            'user' => [
+                'name'  => 'Jane Doe',
+                'email' => 'john.doe@example.com',
+            ],
+        ]);
 });
 
 it('can delete records', function () {
@@ -27,13 +52,13 @@ it('can delete records', function () {
         'user.email' => 'john.doe@example.com',
     ]);
 
-    $this->assertIsString($user);
+    expect($user)->toBeString();
 
     $one_user = DB::table('users')->where('id', $user)->get();
-    $this->assertCount(1, $one_user);
+    expect($one_user)->toHaveCount(1);
 
     DB::table('users')->where('id', $user)->delete();
 
     $no_users = DB::table('users')->where('id', $user)->get();
-    $this->assertCount(0, $no_users);
+    expect($no_users)->toHaveCount(0);
 });

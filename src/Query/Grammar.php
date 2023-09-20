@@ -105,6 +105,22 @@ class Grammar extends BaseGrammar
     /**
      * @inheritDoc
      */
+    public function compileUpdate(Builder $query, array $values)
+    {
+        $columns = $this->compileUpdateColumns($query, $values);
+
+        $where = $this->compileWheres($query);
+
+        return trim(
+            isset($query->joins)
+                ? $this->compileUpdateWithJoins($query, $query->from, $columns, $where)
+                : $this->compileUpdateWithoutJoins($query, $query->from, $columns, $where)
+        );
+    }
+
+    /**
+     * @inheritDoc
+     */
     protected function whereBasic(Builder $query, $where)
     {
         $value = $this->parameter($where['value']);
@@ -212,9 +228,24 @@ class Grammar extends BaseGrammar
     public function wrapTable($table)
     {
         if (! $this->isExpression($table)) {
-            return "type::table('" . trim($this->tablePrefix . $table) . "')";
+            return trim($this->tablePrefix . $table);
         }
 
         return $this->getValue($table);
+    }
+
+    /**
+     * Wrap a single string in keyword identifiers.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    protected function wrapValue($value)
+    {
+        if ($value !== '*') {
+            return str_replace('"', '""', $value);
+        }
+
+        return $value;
     }
 }
