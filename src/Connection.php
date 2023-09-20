@@ -5,6 +5,7 @@ namespace BooneStudios\Surreal;
 use GuzzleHttp\Client as GuzzleClient;
 use Illuminate\Database\Connection as BaseConnection;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
@@ -81,7 +82,7 @@ class Connection extends BaseConnection
      *
      * @param array $config
      */
-    public function __construct(array $config)
+    public function __construct(array $config = [])
     {
         $this->config = $config;
 
