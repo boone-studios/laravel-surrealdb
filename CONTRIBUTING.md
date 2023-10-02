@@ -4,6 +4,21 @@ Contributions are **welcome** and will be fully **credited**.
 
 Please read and understand the contribution guide before creating an issue or pull request.
 
+## Project Setup &amp; Architecture
+
+### Requirements
+
+- PHP 8.1+
+- Composer
+- SurrealDB
+
+## Setup
+
+> [!NOTE]  
+> Be sure to have SurrealDB running in the background prior to testing; otherwise, you will encounter a bunch of errors.
+
+Clone the repository to your local machine. Use Composer to install the project dependencies, and run `vendor/bin/pest` to run all tests. If your environment is configured correctly, then all tests should pass. The database connection for tests is located in [database.php](https://github.com/boone-studios/laravel-surrealdb/blob/main/tests/config/database.php) in the _tests_ directory.
+
 ## Etiquette
 
 This project is open source, and as such, the maintainers give their free time to build and maintain the source code
