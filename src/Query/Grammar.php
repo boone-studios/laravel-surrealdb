@@ -65,6 +65,33 @@ class Grammar extends BaseGrammar
     /**
      * @inheritDoc
      */
+    public function compileUpdate(Builder $query, array $values)
+    {
+        $table = $this->wrapTable($query->from);
+
+        $columns = $this->compileUpdateColumns($query, $values);
+
+        $where = $this->compileWheres($query);
+
+        $query = trim("update {$table} set {$columns} {$where}");
+        var_dump($query);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function compileUpdateColumns(Builder $query, array $values)
+    {
+        return collect($values)->map(function ($value, $key) {
+            $column = last(explode('.', $key));
+
+            return $column . ' = ' . $this->wrapValue($value);
+        })->implode(', ');
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function compileSelect(Builder $query)
     {
         if (($query->unions || $query->havings) && $query->aggregate) {
@@ -92,6 +119,22 @@ class Grammar extends BaseGrammar
         $query->columns = $original;
 
         return $sql;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function compileWheres(Builder $query)
+    {
+        if (is_null($query->wheres)) {
+            return '';
+        }
+
+        var_dump($query->wheres);
+
+        return collect($query->wheres)->map(function ($where) use ($query) {
+            return $where['boolean'].' '.$this->{"where{$where['type']}"}($query, $where);
+        })->implode(', ');
     }
 
     /**

@@ -46,6 +46,20 @@ it('can update records', function () {
         ]);
 });
 
+it('can update records', function () {
+    $user = DB::table('users')->insertGetId([
+        'user.name'  => 'John Doe',
+        'user.email' => 'john.doe@example.com',
+    ]);
+
+    $this->assertIsString($user);
+
+    DB::table('users')->where(['id' => $user])->update(['user.name' => 'Jane Doe']);
+
+    $updated_user = DB::table('users')->where('id', $user)->first();
+    $this->assertEquals('Jane Doe', $updated_user['user']['name']);
+});
+
 it('can delete records', function () {
     $user = DB::table('users')->insertGetId([
         'user.name'  => 'John Doe',

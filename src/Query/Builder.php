@@ -27,16 +27,6 @@ class Builder extends BaseBuilder
     ];
 
     /**
-     * @inheritdoc
-     */
-    public function __construct(Connection $connection, Processor $processor)
-    {
-        $this->grammar    = new Grammar;
-        $this->connection = $connection;
-        $this->processor  = $processor;
-    }
-
-    /**
      * Generate the unique cache key for the current query.
      *
      * @return string

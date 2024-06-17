@@ -130,7 +130,7 @@ class Connection extends BaseConnection
      */
     public function collection($collection)
     {
-        $query = new Query\Builder($this, $this->getPostProcessor());
+        $query = new Query\Builder($this, $this->getDefaultQueryGrammar(), $this->getPostProcessor());
 
         return $query->from($collection);
     }
