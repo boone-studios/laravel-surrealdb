@@ -2,6 +2,12 @@
 
 All notable changes to `laravel-surrealdb` will be documented in this file
 
+## 0.3.0 - 2024-11-27
+
+### Updated
+
+- Upgrade dependencies and allow Laravel v11 (#21)
+
 ## 0.2.1 - 2023-05-09
 
 ### Fixed
