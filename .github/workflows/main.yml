@@ -1,15 +1,15 @@
 name: tests
 
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch: {} # allow manual triggers
   pull_request:
+    branches: [ main ]
+  push:
     branches: [ main ]
 
 jobs:
   laravel:
-    name: Laravel (PHP ${{ matrix.php-versions }})
-
+    name: Laravel (PHP ${{ matrix.php-version }}, SurrealDB ${{ matrix.surreal-version }})
     env:
       SURREALDB_HOST: localhost
       SURREALDB_PORT: 8000
@@ -17,13 +17,12 @@ jobs:
       SURREALDB_PASSWORD: root
       SURREALDB_DATABASE: test
       SURREALDB_NAMESPACE: test
-
-    runs-on: [ ubuntu-latest ]
-
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        php-versions: [ '8.1', '8.2' ]
+        php-version: [ '8.2', '8.3', '8.4' ]
+        surreal-version: [ 'v1' ]
 
     steps:
       - name: Checkout code
@@ -32,7 +31,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-versions }}
+          php-version: ${{ matrix.php-version }}
           extensions: mbstring, dom, fileinfo, pgsql
           coverage: xdebug
 
@@ -51,7 +50,7 @@ jobs:
         run: composer install --no-progress --optimize-autoloader
 
       - name: Start SurrealDB
-        run: sh ./tests/scripts/docker-restart.sh
+        run: sh ./tests/scripts/docker-restart.sh ${{ matrix.surreal-version }}
 
       - name: Execute tests
         run: vendor/bin/pest

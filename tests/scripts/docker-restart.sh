@@ -1,24 +1,18 @@
+#!/usr/bin/env sh
+
+SURREAL_VERSION=${1:-v2}
 WORKING_DIR=$(dirname "$0")
 CONTAINER_NAME="surrealdb-laravel-e2e"
-DATA_PATH="${PWD}/.test_data/$CONTAINER_NAME"
 
 echo " "
 echo "Configuring SurrealDB container"
 echo "-----------------------------------------"
 echo "WORKING_DIR=$WORKING_DIR"
 echo "CONTAINER_NAME=$CONTAINER_NAME"
-echo "DATA_PATH=$DATA_PATH"
 echo "-----------------------------------------"
 echo " "
 
-
-if [ -d "$DATA_PATH" ]; then
-  echo "Previous test dump found - removing '$DATA_PATH'..."
-  rm -rf "$DATA_PATH"
-fi
-
-
-echo "Checking if docker deamon is running"
+echo "Checking if docker daemon is running"
 
 if (! docker stats --no-stream ); then
   echo "Please start the docker daemon"
@@ -29,20 +23,26 @@ echo "Checking for current docker container"
 
 if docker ps --filter "name=$CONTAINER_NAME" | grep $CONTAINER_NAME; then
     echo "Container already running, stopping container..."
-    docker stop $CONTAINER_NAME
+    docker container stop $CONTAINER_NAME
 fi
 
 if docker container ls -a --filter "name=$CONTAINER_NAME" | grep $CONTAINER_NAME; then
     echo "Container already exists, removing container..."
-    docker rm $CONTAINER_NAME
+    docker container rm $CONTAINER_NAME
 fi
 
 echo "Starting container..."
-docker run -d -v $DATA_PATH:/data --name $CONTAINER_NAME -p 8000:8000 surrealdb/surrealdb:latest start --user root --pass root -- "file://data"
+docker container run -d --name $CONTAINER_NAME -p 8000:8000 "surrealdb/surrealdb:${SURREAL_VERSION}" start --user root --pass root
 
-echo " "
-echo "Container is running!"
-echo "Waiting 5 seconds"
+echo "Waiting for container to start..."
 echo "-----------------------------------------"
-
 sleep 5
+
+echo "Checking logs to see if its started..."
+LOGS=$(docker container logs $CONTAINER_NAME)
+echo "${LOGS}"
+
+if (echo "${LOGS}" | grep 'Started web server'); then
+  echo "SurrealDB failed to start, please fix the errors above!"
+  exit 1
+fi
