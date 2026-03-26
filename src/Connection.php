@@ -2,22 +2,19 @@
 
 namespace BooneStudios\Surreal;
 
-use GuzzleHttp\Client as GuzzleClient;
 use Illuminate\Database\Connection as BaseConnection;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
+use RuntimeException;
+use Surreal\Surreal;
+use Surreal\Surreal as SurrealClient;
 
 class Connection extends BaseConnection
 {
     /**
-     * The Surreal database connection handler.
+     * The Surreal SDK client.
      *
-     * @param array $config
-     * @param array $options
-     *
-     * @var \GuzzleHttp\Client
+     * @var Surreal
      */
     protected $connection;
 
@@ -31,15 +28,21 @@ class Connection extends BaseConnection
     /**
      * Bind values to their parameters in the given query.
      *
-     * @param $query
-     * @param $bindings
-     *
-     * @return array
+     * @param  string  $query
+     * @param  array  $bindings
+     * @return string
      */
     protected function bindQueryParams($query, $bindings)
     {
         foreach ($this->prepareBindings($bindings) as $key => $value) {
-            $value = is_string($value) ? "'$value'" : $value;
+            if (is_string($value)) {
+                $value = "'".addslashes($value)."'";
+            } elseif (is_bool($value)) {
+                $value = $value ? 'true' : 'false';
+            } elseif (is_null($value)) {
+                $value = 'null';
+            }
+
             $query = Str::replaceFirst('?', $value, $query);
         }
 
@@ -49,38 +52,47 @@ class Connection extends BaseConnection
     /**
      * Create a new SurrealDB connection.
      *
-     * @param array $config
-     * @param array $options
      *
-     * @var \GuzzleHttp\Client
+     * @return Surreal
      */
     protected function createConnection(array $config, array $options)
     {
-        $baseUri = (! parse_url($config['host'], PHP_URL_HOST))
-            ? $config['host'] . ':' . $config['port']
-            : $config['host'];
+        $protocol = Arr::get($config, 'protocol', 'http');
+        $host = Arr::get($config, 'host', '127.0.0.1');
+        $port = Arr::get($config, 'port', '8000');
+        $url = Arr::get($config, 'url');
 
-        $clientConfig = [
-            'base_uri' => $baseUri,
-            'headers'  => [
-                'Accept'        => 'application/json',
-                'NS'            => $config['namespace'],
-                'DB'            => $config['database'],
-            ],
-        ];
-
-        if ($config['username'] && $config['password']) {
-            $credentials = base64_encode($config['username'] . ':' . $config['password']);
-            $clientConfig['headers']['Authorization'] = 'Basic ' . $credentials;
+        if (! $url) {
+            $hasScheme = parse_url((string) $host, PHP_URL_SCHEME) !== null;
+            $base = $hasScheme ? $host : sprintf('%s://%s', $protocol, $host);
+            $hasPort = parse_url((string) $base, PHP_URL_PORT) !== null;
+            $url = $hasPort ? $base : sprintf('%s:%s', $base, $port);
         }
 
-        return new GuzzleClient($clientConfig);
+        $client = new SurrealClient;
+        $namespace = Arr::get($config, 'namespace');
+        $database = Arr::get($config, 'database');
+        $client->connect($url, [
+            'namespace' => $namespace,
+            'database' => $database,
+        ]);
+
+        if ($token = Arr::get($config, 'token')) {
+            $client->authenticate($token);
+        } elseif (Arr::get($config, 'username') && Arr::get($config, 'password')) {
+            $client->signin([
+                'user' => Arr::get($config, 'username'),
+                'pass' => Arr::get($config, 'password'),
+            ]);
+        }
+
+        $this->configureContext($client, $namespace, $database, (bool) Arr::get($config, 'bootstrap', false));
+
+        return $client;
     }
 
     /**
      * Create a new database connection instance.
-     *
-     * @param array $config
      */
     public function __construct(array $config = [])
     {
@@ -96,7 +108,7 @@ class Connection extends BaseConnection
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function affectingStatement($query, $bindings = [])
     {
@@ -106,15 +118,15 @@ class Connection extends BaseConnection
             }
 
             $query = Str::finish($query, ' return count()');
+            $query = $this->bindQueryParams($query, $bindings);
+            $compiledQuery = (string) $query;
 
-            $response = $this->connection->request('POST', '/sql', [
-                'body' => $this->bindQueryParams($query, $bindings),
-            ]);
-
-            $this->lastResults = json_decode($response->getBody(), true);
+            $response = $this->decode($this->connection->query($compiledQuery));
+            $this->lastResults = $this->normalizeResultPayload($response);
+            $this->throwOnError($compiledQuery, $this->lastResults);
 
             $this->recordsHaveBeenModified(
-                ($count = Arr::get($this->lastResults, 'result.0.count', 0)) > 0
+                ($count = Arr::get($this->lastResults, 'result.0.count', Arr::get($this->lastResults, 'result.count', 0))) > 0
             );
 
             return $count;
@@ -124,8 +136,7 @@ class Connection extends BaseConnection
     /**
      * Begin a fluent query against a database collection.
      *
-     * @param string $collection
-     *
+     * @param  string  $collection
      * @return Query\Builder
      */
     public function collection($collection)
@@ -138,9 +149,9 @@ class Connection extends BaseConnection
     /**
      * Decode the response from the SurrealDB server.
      *
-     * @param mixed $response
-     *
+     * @param  mixed  $response
      * @return mixed
+     *
      * @throws \JsonException
      */
     public function decode($response)
@@ -149,15 +160,15 @@ class Connection extends BaseConnection
             return $response;
         }
 
-        // For now, SurrealDB returns an associative array inside another array
-        // We'll just return the first element of that array because it contains the data we want
-        $decoded = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        if (is_object($response) && method_exists($response, 'toArray')) {
+            return $response->toArray();
+        }
 
-        return $decoded[0];
+        return ['status' => 'OK', 'result' => $response];
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getDriverName()
     {
@@ -165,7 +176,7 @@ class Connection extends BaseConnection
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function getDefaultPostProcessor()
     {
@@ -173,11 +184,11 @@ class Connection extends BaseConnection
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getDefaultQueryGrammar()
     {
-        return new Query\Grammar;
+        return new Query\Grammar($this);
     }
 
     /**
@@ -193,24 +204,23 @@ class Connection extends BaseConnection
     /**
      * Run a select statement against the database.
      *
-     * @param string $query
-     * @param array  $bindings
-     * @param bool   $useReadPdo
-     *
+     * @param  string  $query
+     * @param  array  $bindings
+     * @param  bool  $useReadPdo
      * @return array|mixed
      */
     public function select($query, $bindings = [], $useReadPdo = false)
     {
-        return $this->run($query, $bindings, function ($query, $bindings) use ($useReadPdo) {
+        return $this->run($query, $bindings, function ($query, $bindings) {
             if ($this->pretending()) {
                 return [];
             }
 
-            $response = $this->connection->request('POST', '/sql', [
-                'body' => $this->bindQueryParams($query, $bindings),
-            ]);
-
-            $this->lastResults = $this->decode($response);
+            $query = $this->bindQueryParams($query, $bindings);
+            $compiledQuery = (string) $query;
+            $response = $this->decode($this->connection->query($compiledQuery));
+            $this->lastResults = $this->normalizeResultPayload($response);
+            $this->throwOnError($compiledQuery, $this->lastResults);
 
             return $this->lastResults;
         });
@@ -219,8 +229,8 @@ class Connection extends BaseConnection
     /**
      * Execute an SQL statement and return the boolean result.
      *
-     * @param string $query
-     * @param array  $bindings
+     * @param  string  $query
+     * @param  array  $bindings
      * @return bool
      */
     public function statement($query, $bindings = [])
@@ -230,13 +240,14 @@ class Connection extends BaseConnection
                 return true;
             }
 
-            $response = $this->connection->request('POST', '/sql', [
-                'body' => $this->bindQueryParams($query, $bindings),
-            ]);
+            $query = $this->bindQueryParams($query, $bindings);
+            $compiledQuery = (string) $query;
+            $response = $this->decode($this->connection->query($compiledQuery));
 
             $this->recordsHaveBeenModified();
 
-            $this->lastResults = $this->decode($response);
+            $this->lastResults = $this->normalizeResultPayload($response);
+            $this->throwOnError($compiledQuery, $this->lastResults);
 
             return Arr::get($this->lastResults, 'status', 'OK') === 'OK';
         });
@@ -245,13 +256,118 @@ class Connection extends BaseConnection
     /**
      * Begin a fluent query against a database collection.
      *
-     * @param string  $table
-     * @param ?string $as
-     *
+     * @param  string  $table
+     * @param  ?string  $as
      * @return Query\Builder
      */
     public function table($table, $as = null)
     {
         return $this->collection($table);
+    }
+
+    /**
+     * Normalize statement response to a stable shape.
+     *
+     * @param  mixed  $result
+     * @return array
+     */
+    protected function normalizeResultPayload($result)
+    {
+        if (! is_array($result)) {
+            return ['status' => 'OK', 'result' => $this->normalizeSdkValue($result)];
+        }
+
+        if (Arr::isList($result)) {
+            if (is_string(Arr::first($result))) {
+                return ['status' => 'ERR', 'result' => $result];
+            }
+
+            $first = Arr::first($result);
+
+            if (is_array($first) && Arr::isList($first)) {
+                return ['status' => 'OK', 'result' => $this->normalizeSdkValue($first)];
+            }
+
+            if (is_array($first) && array_key_exists('status', $first) && array_key_exists('result', $first)) {
+                return $first;
+            }
+
+            return ['status' => 'OK', 'result' => $this->normalizeSdkValue($result)];
+        }
+
+        if (! array_key_exists('result', $result)) {
+            $result = ['status' => 'OK', 'result' => $result];
+        }
+
+        if (! array_key_exists('status', $result)) {
+            $result['status'] = 'OK';
+        }
+
+        $result['result'] = $this->normalizeSdkValue($result['result']);
+
+        return $result;
+    }
+
+    /**
+     * Normalize SDK return values into scalar/array primitives.
+     *
+     * @param  mixed  $value
+     * @return mixed
+     */
+    protected function normalizeSdkValue($value)
+    {
+        if (is_array($value)) {
+            return array_map(fn ($item) => $this->normalizeSdkValue($item), $value);
+        }
+
+        if (is_object($value) && method_exists($value, '__toString')) {
+            return (string) $value;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Throw when the SDK reports a query error.
+     *
+     * @param  string  $query
+     * @return void
+     */
+    protected function throwOnError($query, array $payload)
+    {
+        if (Arr::get($payload, 'status') !== 'ERR') {
+            return;
+        }
+
+        $errors = Arr::wrap(Arr::get($payload, 'result', []));
+        $message = Arr::first($errors) ?: 'Unknown SurrealDB query error.';
+
+        throw new RuntimeException(sprintf('SurrealDB query failed: %s (query: %s)', $message, $query));
+    }
+
+    /**
+     * Configure namespace/database context for the connection.
+     *
+     * @param  ?string  $namespace
+     * @param  ?string  $database
+     * @param  bool  $bootstrap
+     * @return void
+     */
+    protected function configureContext(SurrealClient $client, $namespace, $database, $bootstrap)
+    {
+        if (! $namespace || ! $database) {
+            return;
+        }
+
+        if ($bootstrap) {
+            // Useful for tests/local development where NS/DB may be absent.
+            $client->query(sprintf('DEFINE NAMESPACE IF NOT EXISTS %s;', $namespace));
+            $client->query(sprintf('DEFINE DATABASE IF NOT EXISTS %s;', $database));
+        }
+
+        $client->use([
+            'namespace' => $namespace,
+            'database' => $database,
+        ]);
     }
 }

@@ -42,7 +42,7 @@ echo "Checking logs to see if its started..."
 LOGS=$(docker container logs $CONTAINER_NAME)
 echo "${LOGS}"
 
-if (echo "${LOGS}" | grep 'Started web server'); then
+if ! (echo "${LOGS}" | grep -q 'Started web server'); then
   echo "SurrealDB failed to start, please fix the errors above!"
   exit 1
 fi

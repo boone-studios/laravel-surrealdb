@@ -18,6 +18,7 @@
 ## Overview
 
 This package allows you to add a connection to SurrealDB in your Laravel project.
+It uses the official SurrealDB PHP SDK under the hood.
 
 ## Installation
 
@@ -26,6 +27,11 @@ You can install the package via Composer:
 ```bash
 composer require boone-studios/laravel-surrealdb
 ```
+
+### Requirements
+
+- PHP 8.2+
+- Laravel 10+
 
 ## Usage
 
@@ -52,12 +58,17 @@ To configure a new SurrealDB connection, add a new connection entry to `config/d
 ```php
 'surrealdb' => [
     'driver' => 'surrealdb',
+    'protocol' => env('SURREALDB_PROTOCOL', 'http'),
     'host' => env('DB_HOST', '127.0.0.1'),
     'port' => env('DB_PORT', 8000),
+    // Optional full URL override, e.g. http://127.0.0.1:8000
+    'url' => env('SURREALDB_URL'),
     'namespace' => env('DB_NAMESPACE', 'laravel'),
     'database' => env('DB_DATABASE', 'app'),
     'username' => env('DB_USERNAME', 'root'),
     'password' => env('DB_PASSWORD', 'root'),
+    // Optional: auto-create namespace/database if missing (recommended for local/dev only)
+    'bootstrap' => env('SURREALDB_BOOTSTRAP', false),
 ],
 ```
 
@@ -71,6 +82,13 @@ Regarding the `namespace` parameter, from the [SurrealDB documentation](https://
 
 ```bash
 composer test
+```
+
+### Development checks
+
+```bash
+composer analyse
+composer format-check
 ```
 
 ## Changelog

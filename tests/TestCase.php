@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace BooneStudios\Surreal\Tests;
 
+use BooneStudios\Surreal\SurrealServiceProvider;
+use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
@@ -11,7 +13,7 @@ class TestCase extends BaseTestCase
     /**
      * Define environment setup.
      *
-     * @param Illuminate\Foundation\Application $app
+     * @param  Illuminate\Foundation\Application  $app
      * @return void
      */
     protected function getEnvironmentSetUp($app)
@@ -31,13 +33,13 @@ class TestCase extends BaseTestCase
     /**
      * Get package providers.
      *
-     * @param \Illuminate\Foundation\Application $app
+     * @param  Application  $app
      * @return array
      */
     protected function getPackageProviders($app)
     {
         return [
-            \BooneStudios\Surreal\SurrealServiceProvider::class,
+            SurrealServiceProvider::class,
         ];
     }
 }
